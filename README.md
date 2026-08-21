@@ -46,3 +46,4 @@ To deploy this API in a professional, production-ready environment:
    gunicorn fuel_project.wsgi:application --workers 4 --bind 0.0.0.0:8000
    ```
 3. **Caching Backend**: Swap out the default local-memory cache for **Redis** (via `django-redis`) to allow cache sharing across multiple Gunicorn workers.
+        
