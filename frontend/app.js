@@ -92,7 +92,7 @@ function renderResults(data) {
             const lat = stop.coords[1];
             const lon = stop.coords[0];
             const marker = L.marker([lat, lon], { icon: stationIcon }).addTo(map);
-            marker.bindPopup(`<b>${stop.name}</b><br/>$${stop.price_per_gal} / gal`);
+            marker.bindPopup(`<b>${stop.name}</b><br/><span style="font-size: 0.85em; color: #64748b;">${stop.address}, ${stop.city}</span><br/><b>$${stop.price_per_gal}</b> / gal`);
             markers.push(marker);
 
             // Add to list
@@ -102,7 +102,8 @@ function renderResults(data) {
                 <div class="absolute -left-2 -top-2 bg-blue-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold shadow-sm">
                     ${index + 1}
                 </div>
-                <h4 class="font-bold text-slate-800 text-sm mb-1">${stop.name}</h4>
+                <h4 class="font-bold text-slate-800 text-sm mb-0">${stop.name}</h4>
+                <p class="text-xs text-slate-500 mb-2 truncate" title="${stop.address}, ${stop.city}, ${stop.state}">${stop.address}, ${stop.city}, ${stop.state}</p>
                 <div class="flex justify-between items-end text-xs text-slate-500">
                     <div>
                         <p>Route Dist: <span class="font-medium text-slate-700">${stop.route_dist} mi</span></p>
