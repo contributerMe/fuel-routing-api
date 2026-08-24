@@ -19,14 +19,15 @@ class RouteAPIView(APIView):
         ],
         description="Calculates the optimal route and fuel stops between two locations in the USA.",
     )
-    @method_decorator(cache_page(60 * 60 * 24)) # Cache identical requests for 24 hours
+    @method_decorator(cache_page(60 * 60)) #cache entry lives for 1 hour
     def get(self, request):
         start_str = request.query_params.get('start')
         finish_str = request.query_params.get('finish')
         
         if not start_str or not finish_str:
             return Response({"error": "Please provide both 'start' and 'finish' query parameters."}, status=status.HTTP_400_BAD_REQUEST)
-            
+
+        # Get coordinates of start and finish locations using concurrent futures
         with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
             future_start = executor.submit(geocode_address, start_str)
             future_finish = executor.submit(geocode_address, finish_str)
@@ -39,11 +40,13 @@ class RouteAPIView(APIView):
             
         if finish_lon is None:
             return Response({"error": f"Could not geocode finish address: {finish_str}"}, status=status.HTTP_400_BAD_REQUEST)
-            
+        
+        # use OSRM open source routing engine to get a route
         geometry, dist_meters = get_route((start_lon, start_lat), (finish_lon, finish_lat))
         if geometry is None:
             return Response({"error": "Could not find a route between the given locations."}, status=status.HTTP_400_BAD_REQUEST)
-            
+        
+        # call fuel-price optimization algorithm to get optimal fuel stops
         stops, cost = get_optimal_fuel_stops(geometry, dist_meters)
         if stops is None:
             return Response({"error": "Could not find a sequence of fuel stops to complete this route within the 500-mile vehicle range constraint."}, status=status.HTTP_400_BAD_REQUEST)
