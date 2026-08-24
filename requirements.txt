@@ -24,3 +24,5 @@ sqlparse==0.6.0
 typing_extensions==4.16.0
 uritemplate==4.2.0
 urllib3==2.7.0
+polyline==2.0.4
+shapely==2.0.6

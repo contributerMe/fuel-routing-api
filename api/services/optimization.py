@@ -1,30 +1,6 @@
-import math
 import heapq
 from api.models import FuelStation
-
-def haversine(lon1, lat1, lon2, lat2):
-    """Calculate the great circle distance in miles between two points."""
-    R = 3958.8  # Earth radius in miles
-    dlat = math.radians(lat2 - lat1)
-    dlon = math.radians(lon2 - lon1)
-    a = math.sin(dlat/2)**2 + math.cos(math.radians(lat1)) * math.cos(math.radians(lat2)) * math.sin(dlon/2)**2
-    c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-    return R * c
-
-def distance_point_to_segment(px, py, x1, y1, x2, y2):
-    """
-    Returns the distance from point (px, py) to line segment (x1,y1)-(x2,y2)
-    and the fraction of the segment where the closest point lies.
-    Coordinates are approx euclidean for small distances.
-    """
-    l2 = (x2 - x1)**2 + (y2 - y1)**2
-    if l2 == 0:
-        return haversine(px, py, x1, y1), 0.0
-    t = max(0, min(1, ((px - x1)*(x2 - x1) + (py - y1)*(y2 - y1)) / l2))
-    proj_x = x1 + t * (x2 - x1)
-    proj_y = y1 + t * (y2 - y1)
-    return haversine(px, py, proj_x, proj_y), t
-
+from shapely.geometry import LineString, Point
 def get_optimal_fuel_stops(route_geometry, total_distance_meters):
     """
     Finds the optimal fuel stops given a GeoJSON LineString geometry.
@@ -54,35 +30,29 @@ def get_optimal_fuel_stops(route_geometry, total_distance_meters):
     )
     
     # 2. Project stations onto the route to find their distance from start
-    # We pre-calculate cumulative distances of route segments
-    segment_cum_dist = [0.0]
-    for i in range(1, len(coords)):
-        d = haversine(coords[i-1][0], coords[i-1][1], coords[i][0], coords[i][1])
-        segment_cum_dist.append(segment_cum_dist[-1] + d)
-        
-    total_haversine_miles = segment_cum_dist[-1]
     true_total_miles = total_distance_meters / 1609.34
-    scale_factor = true_total_miles / total_haversine_miles if total_haversine_miles > 0 else 1.0
+    
+    # Create Shapely LineString from route coordinates
+    route_line = LineString(coords)
+    
+    # 1 degree of latitude/longitude is roughly 69 miles. 
+    # Use Euclidean distance in degrees for fast geographic filtering
+    search_radius_deg = SEARCH_RADIUS_MILES / 69.0
     
     valid_stations = []
     for station in candidates:
-        min_dist = float('inf')
-        best_route_dist = 0
+        station_point = Point(station.longitude, station.latitude)
         
-        # Find closest segment
-        for i in range(1, len(coords)):
-            dist_to_seg, t = distance_point_to_segment(
-                station.longitude, station.latitude,
-                coords[i-1][0], coords[i-1][1],
-                coords[i][0], coords[i][1]
-            )
-            if dist_to_seg < min_dist:
-                min_dist = dist_to_seg
-                # route distance to this projection point, scaled to true driving distance
-                seg_len = segment_cum_dist[i] - segment_cum_dist[i-1]
-                best_route_dist = (segment_cum_dist[i-1] + (t * seg_len)) * scale_factor
-                
-        if min_dist <= SEARCH_RADIUS_MILES:
+        # Fast Euclidean distance in degrees
+        min_dist_deg = route_line.distance(station_point)
+        
+        if min_dist_deg <= search_radius_deg:
+            # Distance along the line to the closest point in Euclidean degrees
+            proj_dist_deg = route_line.project(station_point)
+            
+            # Scale the degree projection to the true driving distance in miles
+            best_route_dist = (proj_dist_deg / route_line.length) * true_total_miles
+            
             valid_stations.append({
                 'id': station.id,
                 'name': station.name,
@@ -95,6 +65,8 @@ def get_optimal_fuel_stops(route_geometry, total_distance_meters):
             })
             
     # 3. Shortest path algorithm 
+    import time  
+    st = time.perf_counter()
     nodes = [{'id': 'start', 'route_dist': 0.0, 'price': 0.0}]
     # Sort stations by distance from start
     valid_stations.sort(key=lambda x: x['route_dist'])
@@ -159,6 +131,7 @@ def get_optimal_fuel_stops(route_geometry, total_distance_meters):
         
         forward_target = curr
         curr = parent[curr]
-        
+    et = time.perf_counter()
+    time_taken = et-st    
     path.reverse()
     return path, min_cost[-1]
