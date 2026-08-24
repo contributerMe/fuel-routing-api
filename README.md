@@ -36,8 +36,16 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 Navigate to `http://127.0.0.1:8000/api/docs/` to view the interactive Swagger UI and test the API!
+
+Route Overview
 <img width="1710" height="945" alt="image" src="https://github.com/user-attachments/assets/ce9ba97c-0dae-4da2-8a6e-ac65961ff576" />
-<img width="1704" height="927" alt="image" src="https://github.com/user-attachments/assets/e96f94f8-3f27-46f9-b401-6f9e54aba388" />
+
+All fuel stops
+<img width="1710" height="918" alt="image" src="https://github.com/user-attachments/assets/18db6c48-581c-4813-b46b-3faca3f658a5" />
+
+Click on the stops in the the sidebar to get a detailed view of the stop 
+<img width="1708" height="939" alt="image" src="https://github.com/user-attachments/assets/75c620db-4fd1-4780-9ba8-8b609608bbd9" />
+
 
 
 
