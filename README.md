@@ -36,6 +36,10 @@ pip install -r requirements.txt
 python manage.py runserver
 ```
 Navigate to `http://127.0.0.1:8000/api/docs/` to view the interactive Swagger UI and test the API!
+<img width="1710" height="945" alt="image" src="https://github.com/user-attachments/assets/ce9ba97c-0dae-4da2-8a6e-ac65961ff576" />
+<img width="1704" height="927" alt="image" src="https://github.com/user-attachments/assets/e96f94f8-3f27-46f9-b401-6f9e54aba388" />
+
+
 
 ## Production Deployment
 To deploy this API in a professional, production-ready environment:
