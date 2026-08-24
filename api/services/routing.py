@@ -2,7 +2,6 @@ import requests
 
 def get_route(start_coords, end_coords):
     """
-    Calls OSRM to get a route.
     coords should be (lon, lat) tuples.
     Returns GeoJSON LineString geometry and total distance in meters.
     """

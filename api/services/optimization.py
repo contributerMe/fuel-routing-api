@@ -86,13 +86,15 @@ def get_optimal_fuel_stops(route_geometry, total_distance_meters):
             valid_stations.append({
                 'id': station.id,
                 'name': station.name,
+                'address': station.address,
+                'city': station.city,
+                'state': station.state,
                 'price': station.retail_price,
                 'route_dist': best_route_dist,
                 'coords': (station.longitude, station.latitude)
             })
             
-    # 3. Graph Shortest Path (DAG)
-    # Nodes: 0 (Start), 1..N (Stations), N+1 (Finish)
+    # 3. Shortest path algorithm 
     nodes = [{'id': 'start', 'route_dist': 0.0, 'price': 0.0}]
     # Sort stations by distance from start
     valid_stations.sort(key=lambda x: x['route_dist'])
@@ -145,10 +147,14 @@ def get_optimal_fuel_stops(route_geometry, total_distance_meters):
         path.append({
             "stop_id": nodes[curr]['id'],
             "name": nodes[curr]['name'],
+            "address": nodes[curr].get('address'),
+            "city": nodes[curr].get('city'),
+            "state": nodes[curr].get('state'),
             "route_dist": round(nodes[curr]['route_dist'], 2),
             "price_per_gal": nodes[curr]['price'],
             "gallons_purchased": round(gallons_purchased, 2),
-            "leg_cost": round(leg_cost, 2)
+            "leg_cost": round(leg_cost, 2),
+            "coords": nodes[curr]['coords']
         })
         
         forward_target = curr
